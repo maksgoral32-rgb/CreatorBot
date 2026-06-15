@@ -68,4 +68,57 @@ ${prompt}
   }
 });
 
+client.on("interactionCreate", async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
+
+  if (interaction.commandName === "ping") {
+    return interaction.reply("Pong!");
+  }
+
+  if (interaction.commandName === "creator") {
+    await interaction.deferReply();
+
+    const prompt = interaction.options.getString("prompt");
+
+    if (!prompt) {
+      return interaction.editReply("Please tell me what you want to create. Example: `/creator make a Roblox store script`");
+    }
+
+    try {
+      const model = genAI.getGenerativeModel({
+        model: "gemini-1.5-flash"
+      });
+
+      const safePrompt = `
+You are CreatorBot, a helpful assistant for Roblox creators and Discord server owners.
+
+Help with:
+- Roblox scripts
+- Roblox store ideas
+- Discord server setup
+- staff systems
+- announcements
+- safe creator tools
+
+Do not help with scams, fake members, token stealing, spam, raids, or harmful automation.
+
+User request:
+${prompt}
+`;
+
+      const result = await model.generateContent(safePrompt);
+      const reply = result.response.text();
+
+      if (reply.length > 1900) {
+        return interaction.editReply(reply.slice(0, 1900) + "\n\nOutput was shortened.");
+      }
+
+      interaction.editReply(reply);
+    } catch (error) {
+      console.error(error);
+      interaction.editReply("❌ CreatorBot had an error. Check your token, Gemini API key, and console logs.");
+    }
+  }
+});
+
 client.login(process.env.DISCORD_TOKEN);
