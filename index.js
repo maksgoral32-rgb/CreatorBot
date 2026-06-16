@@ -16,6 +16,22 @@ const COLORS = {
   error:   0xed4245, // red
 };
 
+// ── Emoji configuration ───────────────────────────────────────────────────────
+// Set EMOJI_* environment variables in Railway to use custom Discord server
+// emojis (e.g. "<:success:1234567890>"). Falls back to Unicode if not set.
+
+const EMOJIS = {
+  SUCCESS:  process.env.EMOJI_SUCCESS  || "✅",
+  ERROR:    process.env.EMOJI_ERROR    || "❌",
+  WARNING:  process.env.EMOJI_WARNING  || "⚠️",
+  INFO:     process.env.EMOJI_INFO     || "ℹ️",
+  WELCOME:  process.env.EMOJI_WELCOME  || "👋",
+  DM:       process.env.EMOJI_DM       || "📨",
+  ROBOT:    process.env.EMOJI_ROBOT    || "🤖",
+  LIGHTNING:process.env.EMOJI_LIGHTNING|| "⚡",
+  ONLINE:   process.env.EMOJI_ONLINE   || "🟢",
+};
+
 /**
  * Send an embed to the monitoring webhook.
  * @param {string} title       - Embed title (e.g. "✅ CreatorBot Online")
@@ -77,10 +93,10 @@ const client = new Client({
 // ── Ready ────────────────────────────────────────────────────────────────────
 
 client.once("ready", () => {
-  console.log(`✅ CreatorBot is online as ${client.user.tag}`);
+  console.log(`${EMOJIS.ONLINE} CreatorBot is online as ${client.user.tag}`);
 
   logToWebhook(
-    "✅ CreatorBot Online",
+    `${EMOJIS.ONLINE} CreatorBot Online`,
     `**Tag:** ${client.user.tag}\n**Timestamp:** <t:${Math.floor(Date.now() / 1000)}:F>`,
     "success"
   );
@@ -105,10 +121,10 @@ client.once("ready", () => {
 // ── Member join ──────────────────────────────────────────────────────────────
 
 client.on("guildMemberAdd", async (member) => {
-  console.log(`👋 New member joined: ${member.user.tag} in ${member.guild.name}`);
+  console.log(`${EMOJIS.WELCOME} New member joined: ${member.user.tag} in ${member.guild.name}`);
 
   logToWebhook(
-    "👋 New Member",
+    `${EMOJIS.WELCOME} New Member`,
     `**Member:** ${member.user.tag}\n**Server:** ${member.guild.name}`,
     "info"
   );
@@ -118,18 +134,18 @@ client.on("guildMemberAdd", async (member) => {
     await member.send(
       `Welcome to **${member.guild.name}**, ${member.user.username}! 🎉\nI'm CreatorBot — here to help Roblox creators like you. Type \`!creator\` in any channel to get started!`
     );
-    console.log(`📨 Welcome DM sent to ${member.user.tag}`);
+    console.log(`${EMOJIS.DM} Welcome DM sent to ${member.user.tag}`);
 
     logToWebhook(
-      "📨 Welcome DM Sent",
+      `${EMOJIS.DM} Welcome DM Sent`,
       `**Member:** ${member.user.tag}`,
       "success"
     );
   } catch (err) {
-    console.error(`⚠️ Could not send welcome DM to ${member.user.tag}:`, err.message);
+    console.error(`${EMOJIS.WARNING} Could not send welcome DM to ${member.user.tag}:`, err.message);
 
     logToWebhook(
-      "⚠️ Welcome DM Failed",
+      `${EMOJIS.WARNING} Welcome DM Failed`,
       `**Member:** ${member.user.tag}\n**Reason:** ${err.message}`,
       "warning"
     );
@@ -147,10 +163,10 @@ client.on("messageCreate", async (message) => {
   const lowerContent = message.content.toLowerCase();
   for (const keyword of KEYWORDS) {
     if (lowerContent.includes(keyword)) {
-      console.log(`🤖 Auto-response triggered for keyword "${keyword}" by ${message.author.tag}`);
+      console.log(`${EMOJIS.ROBOT} Auto-response triggered for keyword "${keyword}" by ${message.author.tag}`);
 
       logToWebhook(
-        "🤖 Auto-Response",
+        `${EMOJIS.ROBOT} Auto-Response`,
         `**Keyword matched:** \`${keyword}\`\n**User:** ${message.author.tag}\n**Channel:** <#${message.channel.id}>`,
         "info"
       );
@@ -160,10 +176,10 @@ client.on("messageCreate", async (message) => {
 
   // !creator command
   if (message.content.startsWith("!creator")) {
-    console.log(`⚡ !creator command used by ${message.author.tag}: "${message.content}"`);
+    console.log(`${EMOJIS.LIGHTNING} !creator command used by ${message.author.tag}: "${message.content}"`);
 
     logToWebhook(
-      "⚡ Creator Command",
+      `${EMOJIS.LIGHTNING} Creator Command`,
       `**User:** ${message.author.tag}\n**Message:** ${message.content}`,
       "info"
     );
@@ -173,10 +189,10 @@ client.on("messageCreate", async (message) => {
         "I'm CreatorBot! I help Roblox creators. For now, I'm learning. Ask me anything about Roblox scripting, stores, or Discord servers!"
       );
     } catch (err) {
-      console.error(`❌ Failed to reply to !creator from ${message.author.tag}:`, err.message);
+      console.error(`${EMOJIS.ERROR} Failed to reply to !creator from ${message.author.tag}:`, err.message);
 
       logToWebhook(
-        "❌ Error",
+        `${EMOJIS.ERROR} Error`,
         `**Event:** !creator reply failed\n**User:** ${message.author.tag}\n**Details:** ${err.message}`,
         "error"
       );
@@ -189,10 +205,10 @@ client.on("messageCreate", async (message) => {
 // ── Global error handlers ────────────────────────────────────────────────────
 
 client.on("error", (err) => {
-  console.error("❌ Client error:", err.message);
+  console.error(`${EMOJIS.ERROR} Client error:`, err.message);
 
   logToWebhook(
-    "❌ Error",
+    `${EMOJIS.ERROR} Error`,
     `**Event:** Discord client error\n**Details:** ${err.message}`,
     "error"
   );
@@ -200,10 +216,10 @@ client.on("error", (err) => {
 
 process.on("unhandledRejection", (reason) => {
   const message = reason instanceof Error ? reason.message : String(reason);
-  console.error("❌ Unhandled rejection:", message);
+  console.error(`${EMOJIS.ERROR} Unhandled rejection:`, message);
 
   logToWebhook(
-    "❌ Error",
+    `${EMOJIS.ERROR} Error`,
     `**Event:** Unhandled promise rejection\n**Details:** ${message}`,
     "error"
   );
