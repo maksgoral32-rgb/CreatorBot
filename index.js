@@ -16,7 +16,22 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 client.once("ready", () => {
   console.log(`✅ CreatorBot is online as ${client.user.tag}`);
-  client.user.setActivity("helping Roblox creators", { type: 3 });
+
+  const statuses = [
+    "helping Roblox creators",
+    "building with !creator",
+    "Roblox scripts & stores",
+    "your Discord server grow",
+  ];
+
+  let statusIndex = 0;
+
+  client.user.setActivity(statuses[statusIndex], { type: 3 });
+
+  setInterval(() => {
+    statusIndex = (statusIndex + 1) % statuses.length;
+    client.user.setActivity(statuses[statusIndex], { type: 3 });
+  }, 30000);
 });
 
 client.on("messageCreate", async (message) => {
